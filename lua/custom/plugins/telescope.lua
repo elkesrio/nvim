@@ -62,11 +62,12 @@ return { -- Fuzzy Finder (files, lsp, etc)
       --
       defaults = {
         layout_config = { scroll_speed = 1 },
+        file_ignore_patterns = { 'sorbet' },
         history = {
           path = '~/.local/share/nvim/databases/telescope_history.sqlite3',
           limit = 100,
         },
-        cache_picker = { num_pickers = 10, limit_entries = 100 },
+        cache_picker = { num_pickers = 100, limit_entries = 100 },
         mappings = {
           i = {
             ['<C-n>'] = actions.cycle_history_next,

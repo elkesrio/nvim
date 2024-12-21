@@ -94,6 +94,9 @@ vim.opt.scrolloff = 10
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
 
+-- Set max memory pattern to a higher value (default 1000)
+vim.o.maxmempattern = 10000
+
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
 

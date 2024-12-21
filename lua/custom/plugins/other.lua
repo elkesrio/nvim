@@ -8,18 +8,6 @@ local mappings = {
     },
   },
   {
-    pattern = '/app/interactors/(.*).rb',
-    target = {
-      { context = 'mutation', target = '/app/graphql/mutations/%1.rb' },
-    },
-  },
-  {
-    pattern = '/app/graphql/mutations/(.*).rb',
-    target = {
-      { context = 'interactor', target = '/app/interactors/%1.rb' },
-    },
-  },
-  {
     pattern = '/lib/(.*).rb',
     target = {
       { context = 'test', target = '/spec/lib/%1_spec.rb' },
@@ -29,7 +17,6 @@ local mappings = {
     pattern = '/app/models/(.*).rb',
     target = {
       { context = 'model', target = '/app/models/%1.rb', transformer = 'singularize' },
-      { context = 'factories', target = '/spec/factories/%1.rb', transformer = 'pluralize' },
     },
   },
 

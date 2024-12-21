@@ -53,3 +53,8 @@ local function close_all_buffers_and_clear_harpoon()
   harpoon:list():clear()
 end
 map('n', '<leader>C', close_all_buffers_and_clear_harpoon, '[C]lear buffers and harpoons')
+
+local function copy_current_file_path()
+  vim.api.nvim_call_function('setreg', { '+', vim.fn.fnamemodify(vim.fn.expand '%', ':.') })
+end
+map('n', '<leader>yp', copy_current_file_path, 'Copy current file path')

@@ -29,6 +29,12 @@ return { -- LSP Configuration & Plugins
         --  This is where a variable was first declared, or where a function is defined, etc.
         --  To jump back, press <C-T>.
         map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+        map('gsv', function()
+          require('telescope.builtin').lsp_definitions { jump_type = 'vsplit' }
+        end, '[G]oto Definition [S]plit [V]ertical')
+        map('gsx', function()
+          require('telescope.builtin').lsp_definitions { jump_type = 'split' }
+        end, '[G]oto Definition [S]plit horizontal')
 
         -- Find references for the word under your cursor.
         map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
@@ -93,46 +99,6 @@ return { -- LSP Configuration & Plugins
     --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
     local capabilities = vim.lsp.protocol.make_client_capabilities()
     capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
-
-    -- TODO: remove this when vim 0.10.0 is released
-    -- textDocument/diagnostic support until 0.10.0 is released
-    local timers = {}
-    local function setup_diagnostics(client, buffer)
-      if require('vim.lsp.diagnostic')._enable then
-        return
-      end
-
-      local diagnostic_handler = function()
-        local params = vim.lsp.util.make_text_document_params(buffer)
-        client.request('textDocument/diagnostic', { textDocument = params }, function(err, result)
-          if err then
-            local err_msg = string.format('diagnostics error - %s', vim.inspect(err))
-            vim.lsp.log.error(err_msg)
-          end
-          local diagnostic_items = {}
-          if result then
-            diagnostic_items = result.items
-          end
-          vim.lsp.diagnostic.on_publish_diagnostics(nil, vim.tbl_extend('keep', params, { diagnostics = diagnostic_items }), { client_id = client.id })
-        end)
-      end
-
-      diagnostic_handler() -- to request diagnostics on buffer when first attaching
-
-      vim.api.nvim_buf_attach(buffer, false, {
-        on_lines = function()
-          if timers[buffer] then
-            vim.fn.timer_stop(timers[buffer])
-          end
-          timers[buffer] = vim.fn.timer_start(200, diagnostic_handler)
-        end,
-        on_detach = function()
-          if timers[buffer] then
-            vim.fn.timer_stop(timers[buffer])
-          end
-        end,
-      })
-    end
 
     -- adds ShowRubyDeps command to show dependencies in the quickfix list.
     -- add the `all` argument to show indirect dependencies as well
@@ -220,13 +186,24 @@ return { -- LSP Configuration & Plugins
         },
       },
       ruby_lsp = {
-        cmd = { 'bundle', 'exec', 'ruby-lsp' },
+        cmd = { vim.fn.expand '~/.rbenv/shims/ruby-lsp' },
         root_dir = require('lspconfig').util.root_pattern('Gemfile', '.git'),
 
         on_attach = function(client, buffer)
-          setup_diagnostics(client, buffer)
           add_ruby_deps_command(client, buffer)
         end,
+      },
+      sorbet = {
+        mason = false,
+        cmd = {
+          'srb',
+          'typecheck',
+          '--lsp',
+          '--disable-watchman',
+          '--typed=false',
+          -- '--enable-experimental-lsp-signature-help',
+          '--enable-experimental-requires-ancestor',
+        },
       },
     }
 
@@ -255,6 +232,14 @@ return { -- LSP Configuration & Plugins
           -- certain features of an LSP (for example, turning off formatting for tsserver)
           server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
           require('lspconfig')[server_name].setup(server)
+        end,
+        ['sorbet'] = function()
+          local current_dir = vim.loop.cwd()
+          local sorbet_root_dir = vim.fn.expand '~/dev/sorare/' -- Expand '~' to full path
+
+          if current_dir:find(sorbet_root_dir, 1, true) then
+            require('lspconfig')['sorbet'].setup(servers['sorbet'])
+          end
         end,
       },
     }
